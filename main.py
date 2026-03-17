@@ -69,6 +69,10 @@ if df is not None:
             reg = st.selectbox("Regional", ["TODOS"] + sorted(df['Departamento Regional'].unique().tolist()))
             cid = st.selectbox("Cidade", ["TODOS"] + sorted(df['Município'].unique().tolist()))
             emp = st.selectbox("Empresa", ["TODOS"] + sorted(df['Empresa'].unique().tolist()))
+            
+            # --- NOVO FILTRO DE EMBALAGEM ---
+            emb_filtro = st.selectbox("Tipo de Embalagem", ["TODOS"] + sorted(df['Descrição da Embalagem'].unique().tolist()))
+            
             f_marca = st.text_input("Produto", placeholder="Nome do produto...")
             f_lote = st.text_input("Nº do Lote")
             check_pos = st.toggle("Apenas com saldo", value=True)
@@ -84,13 +88,18 @@ if df is not None:
     if btn_buscar:
         res = df.copy()
         
-        # Filtros aplicados passo a passo (mais seguro contra erros)
+        # Lógica de Filtragem Corrigida
         if reg != "TODOS":
             res = res[res['Departamento Regional'] == reg]
         if cid != "TODOS":
             res = res[res['Município'] == cid]
         if emp != "TODOS":
             res = res[res['Empresa'] == emp]
+        
+        # Filtro de Embalagem aplicado aqui
+        if emb_filtro != "TODOS":
+            res = res[res['Descrição da Embalagem'] == emb_filtro]
+            
         if f_marca:
             res = res[res['Marca Comercial'].astype(str).str.contains(f_marca, case=False)]
         if f_lote:
@@ -98,7 +107,7 @@ if df is not None:
         if check_pos:
             res = res[res['Saldo'] > 0]
         
-        # Métricas de resumo
+        # Resumo
         c1, c2 = st.columns(2)
         c1.metric("Itens Encontrados", len(res))
         c2.metric("Saldo Total", f"{int(res['Saldo'].sum())}")
@@ -126,7 +135,7 @@ if df is not None:
                 </div>
                 """, unsafe_allow_html=True)
     else:
-        st.info("👈 Use os filtros na barra lateral e clique em 'CONSULTAR AGORA'.")
+        st.info("👈 Ajuste os filtros na barra lateral e clique em 'CONSULTAR AGORA'.")
         
 else:
     st.error("Erro ao carregar a planilha. Verifique o compartilhamento no Google Sheets.")
