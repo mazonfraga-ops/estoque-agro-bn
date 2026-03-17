@@ -12,55 +12,33 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILO VISUAL REVISADO (ACABAMENTO PREMIUM + LOTE MAIOR) ---
+# --- ESTILO VISUAL REVISADO ---
 st.markdown("""
     <style>
     .stApp { background-color: #f8f9fa; }
-    
-    /* Card com sombra suave e borda lateral */
     .card {
         background-color: #ffffff;
-        padding: 22px;
-        border-radius: 18px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-        margin-bottom: 18px;
-        border-left: 6px solid #2e7d32;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 15px;
+        border-left: 5px solid #2e7d32;
     }
-    
-    .marca-nome { color: #1b5e20; font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; }
-    .info-secundaria { color: #546e7a; font-size: 0.9rem; margin-top: 4px; }
-    
-    /* LOTE COM FONTE MAIOR E DESTAQUE */
+    .marca-nome { color: #1b5e20; font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+    .info-secundaria { color: #6c757d; font-size: 0.85rem; margin-bottom: 2px; }
     .lote-badge { 
-        background-color: #f1f8e9; 
-        color: #1b5e20; 
-        padding: 6px 14px; 
-        border-radius: 10px; 
-        font-weight: 800; 
-        font-size: 1.15rem; /* Fonte aumentada conforme solicitado */
-        display: inline-block;
-        border: 1px solid #c8e6c9;
-        margin-top: 10px;
-        margin-bottom: 10px;
+        background-color: #e8f5e9; color: #2e7d32; 
+        padding: 2px 8px; border-radius: 5px; font-weight: 600; font-size: 0.8rem;
     }
-    
-    /* Container de Saldo com visual moderno */
     .saldo-container {
         display: flex; justify-content: space-between; align-items: center;
-        margin-top: 15px; padding-top: 12px; border-top: 1px solid #f1f1f1;
+        margin-top: 15px; padding-top: 10px; border-top: 1px solid #f1f1f1;
     }
-    .saldo-label { color: #455a64; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.5px; }
-    .saldo-valor { color: #1565c0; font-weight: 900; font-size: 1.6rem; }
-    
-    /* Botão verde personalizado */
+    .saldo-label { color: #495057; font-weight: 500; font-size: 0.9rem; }
+    .saldo-valor { color: #1565c0; font-weight: 800; font-size: 1.4rem; }
     div.stButton > button:first-child {
-        background-color: #2e7d32; color: white; border-radius: 12px;
-        border: none; padding: 0.7rem 2rem; width: 100%; font-weight: bold; font-size: 1rem;
-        transition: 0.3s;
-    }
-    div.stButton > button:hover {
-        background-color: #1b5e20;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        background-color: #2e7d32; color: white; border-radius: 10px;
+        border: none; padding: 0.6rem 2rem; width: 100%; font-weight: bold;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -79,7 +57,7 @@ def carregar_dados():
 df = carregar_dados()
 
 if df is not None:
-    # --- BARRA LATERAL (FILTROS) ---
+    # --- BARRA LATERAL (FILTROS MANTIDOS PARA BUSCA) ---
     with st.sidebar:
         st.markdown("## 🌱 Filtros de Estoque")
         
@@ -106,7 +84,7 @@ if df is not None:
     if btn_buscar:
         res = df.copy()
         
-        # Lógica de Filtros
+        # Filtros
         if reg != "TODOS": res = res[res['Departamento Regional'] == reg]
         if cid != "TODOS": res = res[res['Município'] == cid]
         if emp != "TODOS": res = res[res['Empresa'] == emp]
@@ -116,7 +94,7 @@ if df is not None:
         if f_lote: res = res[res['Nº do Lote'].astype(str).str.contains(f_lote, case=False)]
         if check_pos: res = res[res['Saldo'] > 0]
         
-        # Resumo visual
+        # Métricas
         c1, c2 = st.columns(2)
         c1.metric("Itens Encontrados", len(res))
         c2.metric("Saldo Total", f"{int(res['Saldo'].sum())}")
@@ -127,20 +105,17 @@ if df is not None:
             st.info("Nenhum item encontrado.")
         else:
             for _, linha in res.iterrows():
-                # Card otimizado conforme seu pedido
+                # RESULTADO LIMPO: Sem Doc e Sem Município
                 st.markdown(f"""
                 <div class="card">
                     <div class="marca-nome">{linha['Marca Comercial']}</div>
                     <div class="info-secundaria">📦 {linha['Descrição da Embalagem']}</div>
-                    
-                    <div>
+                    <div style="margin-top: 8px;">
                         <span class="lote-badge">Lote: {linha['Nº do Lote']}</span>
                     </div>
-                    
-                    <div class="info-secundaria" style="margin-top: 5px;">
+                    <div class="info-secundaria" style="margin-top: 10px;">
                         🏢 {linha['Empresa']}
                     </div>
-                    
                     <div class="saldo-container">
                         <span class="saldo-label">SALDO DISPONÍVEL</span>
                         <span class="saldo-valor">{int(linha['Saldo'])}</span>
