@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILO VISUAL ---
+# --- ESTILO VISUAL REVISADO (LOTE MAIOR) ---
 st.markdown("""
     <style>
     .stApp { background-color: #f8f9fa; }
@@ -26,16 +26,26 @@ st.markdown("""
     }
     .marca-nome { color: #1b5e20; font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
     .info-secundaria { color: #6c757d; font-size: 0.85rem; margin-bottom: 2px; }
+    
+    /* BADGE DO LOTE AJUSTADO: Fonte maior e mais visível */
     .lote-badge { 
-        background-color: #e8f5e9; color: #2e7d32; 
-        padding: 2px 8px; border-radius: 5px; font-weight: 600; font-size: 0.8rem;
+        background-color: #e8f5e9; 
+        color: #1b5e20; 
+        padding: 4px 12px; 
+        border-radius: 8px; 
+        font-weight: 700; 
+        font-size: 1.05rem; /* Aumentado de 0.8rem para 1.05rem */
+        display: inline-block;
+        border: 1px solid #c8e6c9;
     }
+    
     .saldo-container {
         display: flex; justify-content: space-between; align-items: center;
         margin-top: 15px; padding-top: 10px; border-top: 1px solid #f1f1f1;
     }
     .saldo-label { color: #495057; font-weight: 500; font-size: 0.9rem; }
     .saldo-valor { color: #1565c0; font-weight: 800; font-size: 1.4rem; }
+    
     div.stButton > button:first-child {
         background-color: #2e7d32; color: white; border-radius: 10px;
         border: none; padding: 0.6rem 2rem; width: 100%; font-weight: bold;
@@ -57,7 +67,7 @@ def carregar_dados():
 df = carregar_dados()
 
 if df is not None:
-    # --- BARRA LATERAL (FILTROS COMPLETOS) ---
+    # --- BARRA LATERAL ---
     with st.sidebar:
         st.markdown("## 🌱 Filtros de Estoque")
         
@@ -65,11 +75,7 @@ if df is not None:
             reg = st.selectbox("📍 Regional", ["TODOS"] + sorted(df['Departamento Regional'].unique().tolist()))
             cid = st.selectbox("🏙️ Município", ["TODOS"] + sorted(df['Município'].unique().tolist()))
             emp = st.selectbox("🏢 Empresa", ["TODOS"] + sorted(df['Empresa'].unique().tolist()))
-            
-            # FILTRO Nº DOCUMENTO
             doc_filtro = st.selectbox("📄 Nº Documento", ["TODOS"] + sorted(df['Nº Documento'].unique().tolist()))
-            
-            # FILTRO EMBALAGEM
             emb_filtro = st.selectbox("📦 Tipo de Embalagem", ["TODOS"] + sorted(df['Descrição da Embalagem'].unique().tolist()))
             
             st.divider()
@@ -88,7 +94,7 @@ if df is not None:
     if btn_buscar:
         res = df.copy()
         
-        # Aplicação dos Filtros
+        # Filtros
         if reg != "TODOS": res = res[res['Departamento Regional'] == reg]
         if cid != "TODOS": res = res[res['Município'] == cid]
         if emp != "TODOS": res = res[res['Empresa'] == emp]
@@ -106,19 +112,20 @@ if df is not None:
         st.divider()
         
         if res.empty:
-            st.info("Nenhum item encontrado com esses filtros.")
+            st.info("Nenhum item encontrado.")
         else:
             for _, linha in res.iterrows():
                 st.markdown(f"""
                 <div class="card">
                     <div class="marca-nome">{linha['Marca Comercial']}</div>
-                    <div class="info-secundaria">📦 {linha['Descrição da Embalagem']} | 📄 Doc: {linha['Nº Documento']}</div>
-                    <div style="margin-top: 8px;">
-                        <span class="lote-badge">Lote: {linha['Nº do Lote']}</span>
+                    <div class="info-secundaria">📦 {linha['Descrição da Embalagem']}</div>
+                    
+                    <div style="margin-top: 10px; margin-bottom: 10px;">
+                        <span class="lote-badge">LOTE: {linha['Nº do Lote']}</span>
                     </div>
-                    <div class="info-secundaria" style="margin-top: 10px;">
-                        🏢 {linha['Empresa']} | 📍 {linha['Município']}
-                    </div>
+                    
+                    <div class="info-secundaria">🏢 {linha['Empresa']}</div>
+                    
                     <div class="saldo-container">
                         <span class="saldo-label">SALDO DISPONÍVEL</span>
                         <span class="saldo-valor">{int(linha['Saldo'])}</span>
@@ -129,4 +136,4 @@ if df is not None:
         st.info("👈 Selecione os filtros ao lado e clique em 'CONSULTAR AGORA'.")
         
 else:
-    st.error("Erro ao carregar os dados. Verifique se a planilha do Google está como 'Qualquer pessoa com o link'.")
+    st.error("Erro ao carregar os dados. Verifique a planilha.")
