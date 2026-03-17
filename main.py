@@ -1,74 +1,89 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração da página
-st.set_page_config(page_title="Estoque Agro BN", layout="centered", page_icon="🌱")
+# Configuração da página para Mobile
+st.set_page_config(page_title="Consulta Agro BN", layout="centered", page_icon="🌱")
 
-# Título visual
-st.markdown("<h1 style='text-align: center; color: #2e7d32;'>🌱 Consulta de Estoque Agro BN</h1>", unsafe_allow_html=True)
+# Título Principal
+st.markdown("<h1 style='text-align: center; color: #2e7d32;'>Estoque Consolidado BN</h1>", unsafe_allow_html=True)
 
 @st.cache_data
-def load_data():
+def carregar_dados():
+    nome_arquivo = "Tabela de estoque teste.xlsx"
     try:
-        df = pd.read_excel("Tabela de estoque teste.xlsx")
-        # Limpar nomes de colunas (remover espaços)
-        df.columns = [str(c).strip() for c in df.columns]
-        # Garantir que o Saldo é número
+        df = pd.read_excel(nome_arquivo)
+        df.columns = df.columns.str.strip()
+        df = df.fillna("---")
+        # Garante que o Saldo seja número
         df['Saldo'] = pd.to_numeric(df['Saldo'], errors='coerce').fillna(0)
         return df
-    except Exception as e:
+    except:
         return None
 
-df = load_data()
+df = carregar_dados()
 
-if df is not None:
-    st.write("### Painel de Filtros")
+if df is None:
+    st.error("Erro: Arquivo 'Tabela de estoque teste.xlsx' não encontrado no GitHub.")
+else:
+    # --- INTERFACE DE FILTROS ---
+    st.write("### 🔍 Filtros em Lista")
     
-    # Criando colunas para os filtros ficarem organizados
     col1, col2 = st.columns(2)
-    
     with col1:
-        reg = st.selectbox("📍 Regional", ["TODOS"] + sorted(df['Departamento Regional'].unique().tolist()))
-        empresa = st.selectbox("🏢 Empresa", ["TODOS"] + sorted(df['Empresa'].unique().tolist()))
-        lote = st.text_input("🔢 Nº do Lote")
-
+        drop_regional = st.selectbox("Regional", ["TODOS"] + sorted(df['Departamento Regional'].unique().tolist()))
+        drop_empresa = st.selectbox("Empresa", ["TODOS"] + sorted(df['Empresa'].unique().tolist()))
     with col2:
-        cid = st.selectbox("🏙️ Município", ["TODOS"] + sorted(df['Município'].unique().tolist()))
-        marca = st.text_input("📦 Marca / Produto")
-        apenas_estoque = st.checkbox("Mostrar apenas com saldo", value=True)
+        drop_cidade = st.selectbox("Cidade", ["TODOS"] + sorted(df['Município'].unique().tolist()))
+        drop_doc = st.selectbox("Nº Documento", ["TODOS"] + sorted(df['Nº Documento'].unique().tolist()))
 
-    # Lógica de Filtragem
-    res = df.copy()
-    if reg != "TODOS": res = res[res['Departamento Regional'] == reg]
-    if cid != "TODOS": res = res[res['Município'] == cid]
-    if empresa != "TODOS": res = res[res['Empresa'] == empresa]
-    if marca: res = res[res['Marca Comercial'].str.contains(marca, case=False, na=False)]
-    if lote: res = res[res['Nº do Lote'].astype(str).str.contains(lote, case=False, na=False)]
-    if apenas_estoque: res = res[res['Saldo'] > 0]
-
-    # Exibição do Resultado
     st.divider()
-    st.metric("Total de Itens Encontrados", len(res))
-    st.write(f"**Saldo Total Acumulado:** {int(res['Saldo'].sum())}")
+    st.write("### ⌨️ Busca por Texto")
+    
+    f_marca = st.text_input("Marca Comercial")
+    f_embalagem = st.text_input("Descrição da Embalagem")
+    f_lote = st.text_input("Nº do Lote")
+    
+    check_estoque_positivo = st.checkbox("Apenas saldo maior que zero", value=True)
 
-    # Cards de resultados
-    for _, linha in res.iterrows():
-        with st.container():
+    # --- LÓGICA DA CONSULTA ---
+    res = df.copy()
+
+    if drop_regional != "TODOS": res = res[res['Departamento Regional'] == drop_regional]
+    if drop_cidade != "TODOS": res = res[res['Município'] == drop_cidade]
+    if drop_empresa != "TODOS": res = res[res['Empresa'] == drop_empresa]
+    if drop_doc != "TODOS": res = res[res['Nº Documento'] == drop_doc]
+    
+    if f_marca: res = res[res['Marca Comercial'].astype(str).str.contains(f_marca, case=False)]
+    if f_embalagem: res = res[res['Descrição da Embalagem'].astype(str).str.contains(f_embalagem, case=False)]
+    if f_lote: res = res[res['Nº do Lote'].astype(str).str.contains(f_lote, case=False)]
+    
+    if check_estoque_positivo:
+        res = res[res['Saldo'] > 0]
+
+    # --- RESULTADOS ---
+    st.divider()
+    total_saldo = res['Saldo'].sum()
+    st.markdown(f"### Saldo Total: <span style='color:green'>{total_saldo}</span>", unsafe_allow_html=True)
+
+    if res.empty:
+        st.warning("Nenhum item encontrado com esses filtros.")
+    else:
+        # Mostra os primeiros 100 resultados para não travar o celular
+        for _, linha in res.head(100).iterrows():
             st.markdown(f"""
-            <div style='border: 1px solid #e0e0e0; padding: 15px; border-radius: 10px; margin-bottom: 12px; background-color: #ffffff; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);'>
-                <div style='color: #2e7d32; font-size: 18px; font-weight: bold;'>{linha['Marca Comercial']}</div>
-                <div style='font-size: 14px; color: #666;'>{linha['Descrição da Embalagem']}</div>
-                <hr style='margin: 8px 0;'>
-                <div style='display: flex; justify-content: space-between;'>
-                    <span><b>Regional:</b> {linha['Departamento Regional']}</span>
-                    <span><b>Cidade:</b> {linha['Município']}</span>
+            <div style='border: 1px solid #DDDDDD; padding: 15px; border-radius: 10px; margin-bottom: 10px; background-color: white;'>
+                <div style='color: #2e7d32; font-weight: bold; font-size: 16px;'>{linha['Marca Comercial']}</div>
+                <div style='font-size: 12px; color: #616161; font-style: italic;'>Embalagem: {linha['Descrição da Embalagem']}</div>
+                <div style='font-size: 12px; font-weight: 500;'>Lote: {linha['Nº do Lote']}</div>
+                <div style='font-size: 11px;'>Empresa: {linha['Empresa']}</div>
+                <hr style='margin: 8px 0; border: 0; border-top: 1px solid #EEEEEE;'>
+                <div style='display: flex; justify-content: space-between; align-items: center;'>
+                    <span style='font-size: 12px; color: #757575;'>SALDO ATUAL:</span>
+                    <span style='color: #0d47a1; font-weight: bold; font-size: 18px;'>{linha['Saldo']}</span>
                 </div>
-                <div style='display: flex; justify-content: space-between; margin-top: 5px;'>
-                    <span><b>Lote:</b> {linha['Nº do Lote']}</span>
-                    <span style='color: #1565c0; font-size: 18px;'><b>SALDO: {int(linha['Saldo'])}</b></span>
-                </div>
-                <div style='font-size: 12px; color: #999; margin-top: 5px;'>Empresa: {linha['Empresa']}</div>
             </div>
             """, unsafe_allow_html=True)
-else:
-    st.error("Erro ao ler a planilha. Verifique se o nome do arquivo no GitHub está exatamente como: Tabela de estoque teste.xlsx")
+
+    # Botão de Limpar (O Streamlit limpa ao atualizar a página, mas podemos adicionar um botão se desejar)
+    if st.button("LIMPAR FILTROS"):
+        st.rerun()
