@@ -79,7 +79,7 @@ if df is not None:
             st.rerun()
 
     # --- ÁREA PRINCIPAL ---
-    st.markdown("<h2 style='color: #2e7d32;'>🌱 Estoque Consolidado </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #2e7d32;'>🌱 Estoque Consolidado Agrotóxicos </h2>", unsafe_allow_html=True)
     
     if btn_buscar:
         res = df.copy()
