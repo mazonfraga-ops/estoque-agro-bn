@@ -28,7 +28,7 @@ st.markdown("""
     .info-secundaria { color: #6c757d; font-size: 0.85rem; margin-bottom: 2px; }
     .lote-badge { 
         background-color: #e8f5e9; color: #2e7d32; 
-        padding: 2px 8px; border-radius: 5px; font-weight: 600; font-size: 0.8rem;
+        padding: 2px 8px; border-radius: 5px; font-weight: 600; font-size: 1.0rem;
     }
     .saldo-container {
         display: flex; justify-content: space-between; align-items: center;
