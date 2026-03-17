@@ -25,7 +25,7 @@ st.markdown("""
         border-left: 5px solid #2e7d32;
     }
     .marca-nome { color: #1b5e20; font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
-    .info-secundaria { color: #6c757d; font-size: 0.85rem; margin-bottom: 2px; }
+    .info-secundaria { color: #6c757d; font-size: 1.0rem; margin-bottom: 2px; }
     .lote-badge { 
         background-color: #e8f5e9; color: #2e7d32; 
         padding: 2px 8px; border-radius: 5px; font-weight: 600; font-size: 1.0rem;
